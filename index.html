@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shadow Linear Clock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {color-scheme:dark;--navy:#002244;--blue:#7BAFD4;--white:#fff;--muted:#b8cbdc}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--navy);color:var(--white);font-family:Oxanium,system-ui,sans-serif}
+    main{width:100%;padding:14px 18px 12px;min-width:260px}
+    header,.meta,.stats{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:.07em}
+    #time{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}
+    #date{color:var(--blue);font-size:13px;margin:2px 0 13px}
+    .track{position:relative;height:10px;background:#39536c;border-radius:99px}
+    #progress{height:100%;width:0;background:var(--blue);border-radius:99px}
+    #indicator{position:absolute;top:50%;left:0;transform:translate(-50%,-50%);height:16px;width:5px;background:white;border-radius:3px;box-shadow:0 0 0 2px var(--blue)}
+    .ticks{display:flex;justify-content:space-between;margin-top:9px;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+    .stats{margin-top:12px;color:var(--muted);font-size:11px}
+    .stats strong{color:var(--white);font-weight:600}
+    @media(max-width:330px){main{padding:12px}.brand{font-size:10px}#time{font-size:23px}.ticks{font-size:10px}}
+  </style>
+</head>
+<body>
+  <main aria-label="24-hour linear clock">
+    <header><span class="brand">SHADOW LINEAR CLOCK</span><time id="time">--:--</time></header>
+    <div id="date">Loading date…</div>
+    <div class="track" role="progressbar" aria-label="Day elapsed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="track">
+      <div id="progress"></div><div id="indicator"></div>
+    </div>
+    <div class="ticks"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+    <div class="stats"><span><strong id="elapsed">0%</strong> elapsed</span><span><strong id="remaining">--h --m</strong> remaining</span></div>
+  </main>
+  <script>
+    const timeElement = document.getElementById('time');
+    const dateElement = document.getElementById('date');
+    const progressElement = document.getElementById('progress');
+    const indicatorElement = document.getElementById('indicator');
+    const elapsedElement = document.getElementById('elapsed');
+    const remainingElement = document.getElementById('remaining');
+    const trackElement = document.getElementById('track');
+    const pad = n => String(n).padStart(2, '0');
+    function updateClock() {
+      const now = new Date();
+      const secondsElapsed = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds() + now.getMilliseconds()/1000;
+      const fraction = secondsElapsed / 86400;
+      const percent = fraction * 100;
+      const minutesRemaining = Math.ceil((86400-secondsElapsed)/60);
+      timeElement.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      timeElement.dateTime = now.toISOString();
+      dateElement.textContent = new Intl.DateTimeFormat('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(now);
+      progressElement.style.width = `${percent}%`;
+      indicatorElement.style.left = `${percent}%`;
+      elapsedElement.textContent = `${percent.toFixed(1)}%`;
+      remainingElement.textContent = `${Math.floor(minutesRemaining/60)}h ${pad(minutesRemaining%60)}m`;
+      trackElement.setAttribute('aria-valuenow', String(Math.round(percent)));
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+    document.addEventListener('visibilitychange', updateClock);
+  </script>
+</body>
+</html>
